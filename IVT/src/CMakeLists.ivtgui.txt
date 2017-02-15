@@ -1,0 +1,338 @@
+################################################
+# IVT Gui Library CMakeFile
+################################################
+# authors:  Kai Welke (welke@kit.edu)
+#           Manfred Kröhnert (kroenert@kit.edu)
+################################################
+include("${IVT_CMAKE_DIR}/macros/IVTMacros.cmake")
+
+###############################################
+# set default options and check
+###############################################
+
+# check if a gui is enabled
+set(GUI_NAMES QT3;QT4;GTK2;COCOA;WIN32)
+
+set(IVT_GUIS_ENABLED 0)
+set(IVT_GUIS_ENABLED_NAMES "")
+foreach(GUI_NAME ${GUI_NAMES})
+    # assure in cache
+    set(IVT_GUI_USE_${GUI_NAME} ${IVT_GUI_USE_${GUI_NAME}} CACHE BOOL "Compile GUI for ${GUI_NAME} support" FORCE)
+    
+    # count
+    if(IVT_GUI_USE_${GUI_NAME})
+        math(EXPR IVT_GUIS_ENABLED "${IVT_GUIS_ENABLED} + 1")
+        set(IVT_GUIS_ENABLED_NAMES ${IVT_GUIS_ENABLED_NAMES} IVT_GUI_USE_${GUI_NAME})
+    endif()
+endforeach()
+
+# more then one gui -> error
+if(IVT_GUIS_ENABLED GREATER 1)
+    message(FATAL_ERROR "Only one IVT_GUI_USE_* is allowed to build ivtgui. Currently the following GUIs are selected:\n ${IVT_GUIS_ENABLED_NAMES}\n")
+endif()
+
+# no gui selected -> select default gui
+if(IVT_GUIS_ENABLED EQUAL 0)
+    # default for UNIX is QT4
+    if(UNIX)
+        if( NOT APPLE )
+            set(IVT_GUI_USE_QT4 TRUE CACHE BOOL "Compile GUI for QT4 support" FORCE)
+        endif()
+    endif()
+
+    # default for MACOS is COCOA
+    if(APPLE)
+        set(IVT_GUI_USE_COCOA TRUE CACHE BOOL "Compile GUI for COCOA support" FORCE)
+    endif()
+
+    # default for Windows is WIN32
+    if(MSVC)
+        set(IVT_GUI_USE_WIN32 TRUE CACHE BOOL "Compile GUI for WIN32 support" FORCE)
+    endif()        
+endif()
+
+###############################################
+# find dependencies
+###############################################
+find_package(OpenGL)
+find_package(GTK2)
+find_package(Coin3D)
+find_package(SoQt)
+find_library(Cocoa_FRAMEWORK Cocoa)
+
+if(IVT_GUI_USE_QT3)
+    find_package(Qt3)
+endif()
+
+if(IVT_GUI_USE_QT4)
+    find_package(Qt4 COMPONENTS QtCore QtGui QtOpenGL)
+endif()
+
+if(IVT_USE_OPENCV1)
+    find_package(OpenCV1 COMPONENTS CV CXCORE HIGHGUI)
+else()
+    find_package(OpenCV 2 QUIET COMPONENTS cv cxcore cvaux highgui)
+endif()
+
+
+set(IVT_BUILD_GUI FALSE)
+set(IVT_GUI_LIBRARY_NAME "")
+
+###############################################
+# common sources libs and headers
+###############################################
+set(IVT_GUI_REQUIRED_LIBRARIES ivt)
+set(IVT_GUI_REQUIRED_INCLUDE_DIRS "")
+
+set(IVT_GUI_SOURCES
+    gui/GUIFactory.cpp
+   )
+    
+if(OpenCV_FOUND)
+    list(APPEND IVT_GUI_SOURCES
+        gui/OpenCVWindow.cpp
+        gui/OpenCVApplicationHandler.cpp
+        )
+
+    list(APPEND IVT_GUI_REQUIRED_INCLUDE_DIRS ${OpenCV_INCLUDE_DIRS})
+    list(APPEND IVT_GUI_REQUIRED_LIBRARIES ${OpenCV_LIBRARIES})
+    
+    if(IVT_USE_OPENCV1)
+        set(IVT_GUI_HAVE_OPENCV1 TRUE)
+    else()
+        set(IVT_GUI_HAVE_OPENCV2 TRUE)
+    endif()
+endif()
+
+###############################################
+# Qt3 / Qt4
+###############################################
+if(QT_FOUND AND IVT_GUI_USE_QT3)
+     set(USE_AND_FOUND_QT3 TRUE)
+endif()
+if(QT4_FOUND AND IVT_GUI_USE_QT4)
+     set(USE_AND_FOUND_QT4 TRUE)
+	 cache_append_value(PACKAGE_DEPENDENCIES "libqt4-dev") 
+     if(Coin3D_FOUND AND SoQt_FOUND)
+		cache_append_value(PACKAGE_DEPENDENCIES "libsoqt4-dev")
+     endif()
+endif()
+
+if( USE_AND_FOUND_QT3 OR USE_AND_FOUND_QT4 )
+    list(APPEND IVT_GUI_SOURCES
+            gui/QTWindow.cpp
+            gui/QTPainter.cpp
+            gui/QTApplicationHandler.cpp
+            gui/QTColorParameterWindow.cpp
+            gui/Qt/QtApplicationHandler.cpp
+            gui/Qt/QtMainWindow.cpp
+            gui/Qt/QtMainWindowWidget.cpp
+        )
+        
+    list(APPEND IVT_GUI_MOC_SOURCES
+        gui/QTColorParameterWindow.h
+        gui/QTApplicationHandler.h
+        gui/Qt/QtMainWindowWidget.h
+        gui/Qt/QtApplicationHandler.h
+    )
+    
+    if(OPENGL_FOUND)
+        list(APPEND IVT_GUI_SOURCES
+             gui/GLContext.cpp
+             gui/QTGLWindow.cpp
+            )
+
+        list(APPEND IVT_GUI_REQUIRED_INCLUDE_DIRS ${OPENGL_INCLUDE_DIR})
+        list(APPEND IVT_GUI_REQUIRED_LIBRARIES ${OPENGL_LIBRARIES})
+
+        set(IVT_GUI_HAVE_OPENGL TRUE)
+    endif(OPENGL_FOUND)
+    
+    if(Coin3D_FOUND AND SoQt_FOUND)
+        list(APPEND IVT_GUI_SOURCES
+             Visualizer/OpenInventorVisualizer.cpp
+            )
+
+        list(APPEND IVT_GUI_REQUIRED_INCLUDE_DIRS ${Coin3D_INCLUDE_DIRS} ${SoQt_INCLUDE_DIRS} )
+        list(APPEND IVT_GUI_REQUIRED_LIBRARIES ${Coin3D_LIBRARIES} ${SoQt_LIBRARIES} )
+
+        set(IVT_GUI_HAVE_Coin3D TRUE)
+    endif(Coin3D_FOUND AND SoQt_FOUND)
+    
+    append_headers_from_cpp(IVT_GUI_HEADERS "${IVT_GUI_SOURCES}" ${IVT_INCLUDE_DIR})
+    create_source_groups("${IVT_GUI_SOURCES}")
+    create_source_groups("${IVT_GUI_HEADERS}")
+    
+    if(USE_AND_FOUND_QT4)
+        message(STATUS "Building ivtgui with QT4")
+        include(${QT_USE_FILE}) 
+        qt4_wrap_cpp(IVT_GUI_SOURCES ${IVT_GUI_MOC_SOURCES})
+        list(APPEND IVT_GUI_REQUIRED_INCLUDE_DIRS ${QT_QT_INCLUDE_DIR} ${QT_QTCORE_INCLUDE_DIR} ${QT_QTGUI_INCLUDE_DIR} ${QT_QTOPENGL_INCLUDE_DIR})
+        list(APPEND IVT_GUI_REQUIRED_LIBRARIES ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTOPENGL_LIBRARY})
+        set(IVT_BUILD_GUI TRUE)
+        set(IVT_GUI_LIBRARY_NAME ivtguiqt4)
+        set(IVT_GUI_HAVE_QT4 TRUE)
+    elseif(USE_AND_FOUND_QT3)
+        message(STATUS "Building ivtgui with QT3")
+        list(APPEND IVT_GUI_REQUIRED_INCLUDE_DIRS ${QT_INCLUDE_DIR} ${QT_INCLUDE_DIR}/qt )
+        list(APPEND IVT_GUI_REQUIRED_LIBRARIES ${QT_LIBRARIES})
+        set(IVT_BUILD_GUI TRUE)
+        set(IVT_GUI_LIBRARY_NAME ivtguiqt3)
+        qt_wrap_cpp(ivtguiqt3 IVT_GUI_SOURCES ${IVT_GUI_MOC_SOURCES})
+        set(IVT_GUI_HAVE_QT3 TRUE)
+    endif()    
+endif()
+
+###############################################
+# Gtk2
+###############################################
+if(GTK2_FOUND AND IVT_GUI_USE_GTK2)
+    message(STATUS "Building ivtgui with GTK2")
+
+    list(APPEND IVT_GUI_SOURCES
+        gui/GUIFactory.cpp
+        gui/GTK/GTKApplicationHandler.cpp
+        gui/GTK/GTKMainWindow.cpp
+        gui/GTK/GTKMainWindowWidget.cpp
+        )
+
+    if(OPENGL_FOUND)
+        list(APPEND IVT_GUI_SOURCES
+            gui/GLContext.cpp
+            gui/GTK/GTKGLContext.cpp
+        )
+
+        list(APPEND IVT_GUI_REQUIRED_INCLUDE_DIRS ${OPENGL_INCLUDE_DIR})
+        list(APPEND IVT_GUI_REQUIRED_LIBRARIES ${OPENGL_LIBRARIES})
+
+        set(IVT_GUI_HAVE_OPENGL TRUE)
+    endif(OPENGL_FOUND)
+
+    append_headers_from_cpp(IVT_GUI_HEADERS "${IVT_GUI_SOURCES}" ${IVT_INCLUDE_DIR})
+    create_source_groups("${IVT_GUI_SOURCES}")
+    create_source_groups("${IVT_GUI_HEADERS}")
+    
+    list(APPEND IVT_GUI_REQUIRED_INCLUDE_DIRS ${GTK2_INCLUDE_DIRS})
+    list(APPEND IVT_GUI_REQUIRED_LIBRARIES ${GTK2_LIBRARIES})
+    set(IVT_BUILD_GUI TRUE)
+    set(IVT_GUI_LIBRARY_NAME ivtguigtk)
+
+    set(IVT_GUI_HAVE_GTK2 TRUE)
+endif()
+
+###############################################
+# Cocoa (NOT TESTED)
+###############################################
+if(IVT_GUI_USE_COCOA)
+    message(STATUS "Building ivtgui with Cocoa")
+
+    list(APPEND IVT_GUI_SOURCES
+        gui/Cocoa/GUIFactory.m
+        gui/Cocoa/CocoaApplicationHandler.cpp
+        gui/Cocoa/CocoaMainWindow.cpp
+        gui/Cocoa/CocoaImplementation.m
+        )
+
+    list(APPEND IVT_GUI_REQUIRED_LIBRARIES
+        "${Cocoa_FRAMEWORK}"
+        )
+    if(OPENGL_FOUND)
+        list(APPEND IVT_GUI_SOURCES
+            gui/GLContext.cpp
+            gui/Cocoa/GLContext.m
+        )
+
+        list(APPEND IVT_GUI_REQUIRED_INCLUDE_DIRS ${OPENGL_INCLUDE_DIR})
+        list(APPEND IVT_GUI_REQUIRED_LIBRARIES ${OPENGL_LIBRARIES})
+
+        set(IVT_GUI_HAVE_OPENGL TRUE)
+    endif(OPENGL_FOUND)
+
+    append_headers_from_cpp(IVT_GUI_HEADERS "${IVT_GUI_SOURCES}" ${IVT_INCLUDE_DIR})
+    create_source_groups("${IVT_GUI_SOURCES}")
+    create_source_groups("${IVT_GUI_HEADERS}")
+        
+    set(IVT_BUILD_GUI TRUE)
+    set(IVT_GUI_LIBRARY_NAME ivtguicocoa)
+
+    set(IVT_GUI_HAVE_COCOA TRUE)
+endif()
+
+###############################################
+# WIN32
+###############################################
+if(IVT_GUI_USE_WIN32)
+    if(OPENGL_FOUND)
+        message(STATUS "Building ivtgui with WIN32")
+
+        list(APPEND IVT_GUI_SOURCES
+            gui/win32/Win32ApplicationHandler.cpp
+            gui/win32/Win32MainWindow.cpp
+            gui/GLContext.cpp
+            )
+
+        list(APPEND IVT_GUI_REQUIRED_INCLUDE_DIRS ${OPENGL_INCLUDE_DIR})
+        list(APPEND IVT_GUI_REQUIRED_LIBRARIES ${OPENGL_LIBRARIES})
+        list(APPEND IVT_GUI_REQUIRED_LIBRARIES comctl32.lib)
+                
+        append_headers_from_cpp(IVT_GUI_HEADERS "${IVT_GUI_SOURCES}" ${IVT_INCLUDE_DIR})
+        create_source_groups("${IVT_GUI_SOURCES}")
+        create_source_groups("${IVT_GUI_HEADERS}")
+
+        set(IVT_GUI_LIBRARY_NAME ivtguiwin32)
+
+        set(IVT_GUI_HAVE_OPENGL TRUE)
+        set(IVT_GUI_HAVE_WIN32 TRUE)
+
+        set(IVT_BUILD_GUI TRUE)
+    endif(OPENGL_FOUND)
+endif()
+
+###############################################
+# Build the GUI library
+###############################################
+if(IVT_BUILD_GUI)
+    include_directories(${IVT_INCLUDE_DIR} ${IVT_GUI_REQUIRED_INCLUDE_DIRS})
+    include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+    add_library(${IVT_GUI_LIBRARY_NAME} STATIC ${IVT_GUI_SOURCES} ${IVT_GUI_HEADERS})
+    target_link_libraries(${IVT_GUI_LIBRARY_NAME} ${IVT_GUI_REQUIRED_LIBRARIES} )
+    set(IVT_LIBRARIES ${IVT_LIBRARIES} ${IVT_GUI_LIBRARY_NAME})
+
+    set_target_properties( ${IVT_GUI_LIBRARY_NAME}  PROPERTIES
+        VERSION ${IVT_VERSION}
+        SOVERSION ${IVT_MAJOR_VERSION}
+    )
+
+    # .DLL path
+    set_target_properties(${IVT_GUI_LIBRARY_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${IVT_BINARY_DIR})
+    # .so path
+    set_target_properties(${IVT_GUI_LIBRARY_NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${IVT_LIBRARY_DIR})
+    # .lib path (this is needed for setting the DLL-import library path on windows)
+    set_target_properties(${IVT_GUI_LIBRARY_NAME} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${IVT_LIBRARY_DIR})
+    
+    ###############################################
+    # configuration and installs
+    ###############################################
+    # generate config.h once for installation, once for overwriting the file that is included by several IVT files
+    configure_file(${IVT_CMAKE_DIR}/templates/ivtgui_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_DIR}/ivtgui_config.h)
+    configure_file(${IVT_CMAKE_DIR}/templates/ivtgui_config.h.in ${IVT_INCLUDE_DIR}/${CONFIG_DIR}/ivtgui_config.h)
+
+    # install headers
+    foreach(HEADER ${IVT_GUI_HEADERS})
+        string(REGEX MATCH "(.*)[/\\]" DIR ${HEADER})
+        install(FILES ${HEADER} DESTINATION ${IVT_INSTALL_HEADER_DIR}/${DIR} COMPONENT Headers)
+    endforeach()
+
+    # install configs
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_DIR}/ivtgui_config.h DESTINATION ${IVT_INSTALL_HEADER_DIR}/${CONFIG_DIR} COMPONENT Headers)
+
+
+    install(TARGETS ${IVT_GUI_LIBRARY_NAME}
+            EXPORT IVT-targets
+            ARCHIVE DESTINATION ${IVT_INSTALL_LIBRARY_DIR}
+            RUNTIME DESTINATION ${IVT_INSTALL_LIBRARY_DIR}
+            LIBRARY DESTINATION ${IVT_INSTALL_LIBRARY_DIR}
+            COMPONENT Libraries
+            )      
+endif(IVT_BUILD_GUI)

@@ -1,0 +1,20 @@
+#######################################################################################################################
+# IVTUseFile.cmake
+#######################################################################################################################
+# author:  Kai Welke (welke@kit.edu)
+#######################################################################################################################
+# The UseFile adds required definitions and settings to the CMakeList.txt.
+#
+# Use the following to properly include IVT in your project
+#     find_package(IVT)
+#     include(${IVT_USE_FILE})
+#######################################################################################################################
+get_filename_component(CURRENT_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+# add path to IVT data dir
+add_definitions("-DIVT_DATA_DIR=\"${IVT_DATA_DIR}\"")
+
+# static runtime under windows
+if(IVT_WINDOWS_RUNTIME_STATIC)
+    make_windows_runtime_static()
+endif()

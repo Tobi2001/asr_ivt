@@ -1,0 +1,130 @@
+#######################################################################################################################
+# IVTConfig.cmake
+#######################################################################################################################
+# author:  Kai Welke (welke@kit.edu)
+#######################################################################################################################
+# Config file for the IVT package
+#
+# The following variables are defined
+#  IVT_BASE_DIR      - path to IVT
+#  IVT_INCLUDE_DIRS  - include directory for IVT
+#  IVT_LIBRARY_DIRS  - library directory for IVT
+#  IVT_LIBRARIES     - libraries to link against
+#  IVT_DATA_DIR      - directory where IVT files reside (such as example BMPs, ...)
+#  IVT_USE_FILE      - file setting up additional things for your project 
+#                      (e.g. automatically add data dir, windows runtime as dll / lib, ...)
+# In-build as well as installed versions are handled
+#
+# In order to find this package use:
+#    find_package(IVT)
+#    include(${IVT_USE_FILE})
+#
+# Make sure, that either IVT is installed in one of CMake's search paths, or IVT_DIR is set to 
+# the directory where this file resides in.
+#
+# Optionally you can  select components of the IVT for your projects by using
+#    find_package(IVT COMPONENTS component1 component2 ... [REQUIRED])
+# Available components are:
+#    * ivt - the base library
+#    * ivtvideocapture - the videocapture librarry
+#    * ivtopencv - the opencv support library
+#    * ivtguiqt3 - the Qt3 gui library
+#    * ivtguiqt4 - the Qt4 gui library
+#    * ivtguigtk - the GTK2 gui library
+#    * ivtguicocoa - the Cocoa gui library
+#    * ivtguiwin32 - the WIN32 gui library
+#
+# If you add the REQUIRED option, find_package will fail with a FATAL_ERROR if one component is not 
+# found. Otherwise, the variables IVT_componentname_FOUND will be set, where componentname corresponds 
+# to one of the above list.
+#
+# In order to write projects in a GUI framework independent way, the special component "ivtgui" is 
+# supported. This will expand to the GUI framwork that has been used during the build process of IVT:
+#    find_package(IVT COMPONENTS ivt ivtgui)
+#
+# In order to increase portabiliy (concerning windows runtime lib) and support of the IVT data path, you 
+# should include the IVT_USE_FILE in your project's CMakeList.
+#
+# Further, for conveniance, all defines in ivt_config.h are also provided as variables in CMake. See
+# IVTFeatures.cmake.
+#######################################################################################################################
+
+# check whether in-build or installed
+get_filename_component(CURRENT_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+if(EXISTS "${CURRENT_CMAKE_DIR}/CMakeCache.txt")
+   # In build tree
+   set(IVT_INBUILD TRUE)
+else()
+   set(IVT_INBUILD FALSE)
+endif()
+
+
+# set overall base and library dir
+if(IVT_INBUILD)
+    include("${CURRENT_CMAKE_DIR}/IVTBuildTreeSettings.cmake")
+else()
+    set(IVT_LIBRARY_DIRS "@IVT_INSTALL_LIBRARY_DIR@")
+    set(IVT_INCLUDE_DIRS "@IVT_INSTALL_HEADER_DIR@")
+    set(IVT_DATA_DIR "@IVT_INSTALL_DATA_DIR@/@DATA_DIR@/")
+    set(IVT_USE_FILE "@IVT_INSTALL_DATA_DIR@/IVTUseFile.cmake")    
+    include("@IVT_INSTALL_CMAKE_DIR@/IVTMacros.cmake")
+endif()
+
+# available libraries
+set(IVT_LIBRARIES "@IVT_LIBRARIES@")
+set(IVT_COMPONENTS "@IVT_LIBRARIES@")
+
+# make availabe features
+include("${CURRENT_CMAKE_DIR}/IVTFeatures.cmake")
+
+# include exported project dependencies
+if(NOT TARGET ivt)
+    include("${CURRENT_CMAKE_DIR}/IVTLibraryDepends.cmake")
+endif()
+
+# only use specified components
+if (IVT_FIND_COMPONENTS)
+    message(STATUS "Building against IVT components: ${IVT_FIND_COMPONENTS}")
+    
+    # preprocess: replace ivtgui with first occurrance of ivtgui* in libraries.
+    # this allows to build against ANY gui using the component "ivtgui"
+    foreach(library ${IVT_LIBRARIES})
+        if(library MATCHES "ivtgui.*")
+            set(EXPANDED_IVT_GUI_LIB ${library})
+        endif()
+    endforeach()
+
+    set(IVT_LIBRARIES "")
+    # include only specified components
+    foreach(component ${IVT_FIND_COMPONENTS})
+        
+        # do the ivtgui replacement
+        if(component MATCHES "^ivtgui$")
+            if(EXPANDED_IVT_GUI_LIB)
+                set(component ${EXPANDED_IVT_GUI_LIB})
+                message(STATUS "Using ${EXPANDED_IVT_GUI_LIB} as ivtgui")
+            endif()
+        endif()
+
+        # check whether component exists
+        list(FIND IVT_COMPONENTS ${component} componentFound)
+        if(componentFound LESS 0)
+
+            if(IVT_FIND_REQUIRED)
+                message(FATAL_ERROR "Requested component \"${component}\" not available in the IVT. Either try to rebuild IVT in order to offer the component or fix your CMakeLists.txt")
+            else(IVT_FIND_REQUIRED)
+                if(NOT IVT_FIND_QUIETLY)
+                    message(STATUS "Requested component \"${component}\" not available in the IVT")
+                endif()
+            endif()
+
+            set(IVT_${component}_FOUND NO)
+        else(componentFound LESS 0)
+            set(IVT_LIBRARIES ${IVT_LIBRARIES} ${component} )
+            set(IVT_${component}_FOUND YES)
+        endif()
+    endforeach()
+# all available components
+else (IVT_FIND_COMPONENTS)
+    message(STATUS "Building against all available IVT components: ${IVT_COMPONENTS}")
+endif()

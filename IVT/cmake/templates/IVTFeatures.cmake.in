@@ -1,0 +1,45 @@
+#######################################################################################################################
+# IVTFeatures.cmake
+#######################################################################################################################
+# author:  Kai Welke (welke@kit.edu)
+#######################################################################################################################
+# Makes available the features that are available in the IVT.
+# This is the equivalent to the ivt_config.h for CMake
+#######################################################################################################################
+
+# misc project settings
+set(IVT_WINDOWS_RUNTIME_STATIC @IVT_WINDOWS_RUNTIME_STATIC@)
+
+# for libivt
+set(IVT_HAVE_OPENGL @IVT_HAVE_OPENGL@)
+set(IVT_HAVE_SVS @IVT_HAVE_SVS@)
+
+# for libivtopencv
+set(IVT_OPENCV_HAVE_OPENCV1 @IVT_OPENCV_HAVE_OPENCV1@)
+set(IVT_OPENCV_HAVE_OPENCV2 @IVT_OPENCV_HAVE_OPENCV2@)
+
+# for libivtgui*
+set(IVT_GUI_HAVE_OPENCV1 @IVT_GUI_HAVE_OPENCV1@)
+set(IVT_GUI_HAVE_OPENCV2 @IVT_GUI_HAVE_OPENCV2@)
+set(IVT_GUI_HAVE_OPENGL @IVT_GUI_HAVE_OPENGL@)
+set(IVT_GUI_HAVE_Coin3D @IVT_GUI_HAVE_Coin3D@)
+set(IVT_GUI_HAVE_QT4 @IVT_GUI_HAVE_QT4@)
+set(IVT_GUI_HAVE_QT3 @IVT_GUI_HAVE_QT3@)
+set(IVT_GUI_HAVE_GTK2 @IVT_GUI_HAVE_GTK2@)
+set(IVT_GUI_HAVE_COCOA @IVT_GUI_HAVE_COCOA@)
+set(IVT_GUI_HAVE_WIN32 @IVT_GUI_HAVE_WIN32@)
+
+# for libivtvideocapture
+set(V4L_HAVE_LINUX_VIDEODEV_H @V4L_HAVE_LINUX_VIDEODEV_H@)
+set(IVT_VIDEOCAPTURE_HAVE_OPENCV1 @IVT_VIDEOCAPTURE_HAVE_OPENCV1@)
+set(IVT_VIDEOCAPTURE_HAVE_OPENCV2 @IVT_VIDEOCAPTURE_HAVE_OPENCV2@)
+set(IVT_VIDEOCAPTURE_HAVE_OPENGL @IVT_VIDEOCAPTURE_HAVE_OPENGL@)
+set(IVT_VIDEOCAPTURE_HAVE_DC1394 @IVT_VIDEOCAPTURE_HAVE_DC1394@)
+set(IVT_VIDEOCAPTURE_HAVE_DC1394V2 @IVT_VIDEOCAPTURE_HAVE_DC1394V2@)
+set(IVT_VIDEOCAPTURE_HAVE_QUICKTIME @IVT_VIDEOCAPTURE_HAVE_QUICKTIME@)
+set(IVT_VIDEOCAPTURE_HAVE_V4L @IVT_VIDEOCAPTURE_HAVE_V4L@)
+set(IVT_VIDEOCAPTURE_HAVE_UNICAP @IVT_VIDEOCAPTURE_HAVE_UNICAP@)
+set(IVT_VIDEOCAPTURE_HAVE_SVS @IVT_VIDEOCAPTURE_HAVE_SVS@)
+set(IVT_VIDEOCAPTURE_HAVE_VFW @IVT_VIDEOCAPTURE_HAVE_VFW@)
+set(IVT_VIDEOCAPTURE_HAVE_CMU1394 @IVT_VIDEOCAPTURE_HAVE_CMU1394@)
+

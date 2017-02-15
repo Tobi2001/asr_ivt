@@ -1,0 +1,15 @@
+#ifndef IVT_GUI_CONFIG_H
+#define IVT_GUI_CONFIG_H
+
+#define IVT_GUI_BUILD_SYSTEM_PROCESSOR @CMAKE_SYSTEM_PROCESSOR@
+#cmakedefine IVT_GUI_HAVE_OPENCV1
+#cmakedefine IVT_GUI_HAVE_OPENCV2
+#cmakedefine IVT_GUI_HAVE_OPENGL
+#cmakedefine IVT_GUI_HAVE_Coin3D
+#cmakedefine IVT_GUI_HAVE_QT4
+#cmakedefine IVT_GUI_HAVE_QT3
+#cmakedefine IVT_GUI_HAVE_GTK2
+#cmakedefine IVT_GUI_HAVE_COCOA
+#cmakedefine IVT_GUI_HAVE_WIN32
+
+#endif /* IVT_GUI_CONFIG_H */

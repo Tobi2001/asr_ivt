@@ -1,0 +1,167 @@
+################################################
+# IVT VideoCapture Library CMakeFile
+################################################
+# authors:  Kai Welke (welke@kit.edu)
+#           Manfred Kröhnert (kroenert@kit.edu)
+################################################
+
+###############################################
+# find dependencies
+###############################################
+find_package(DC1394)
+find_package(DC1394V2)
+find_package(V4L)
+find_package(Unicap)
+find_package(SVS)
+find_package(OpenGL)
+
+if(IVT_USE_OPENCV1)
+    find_package(OpenCV1 COMPONENTS CV CXCORE CVAUX HIGHGUI)
+else()
+    find_package(OpenCV 2 QUIET COMPONENTS cv cxcore cvaux highgui)
+endif()
+if(APPLE)
+    if(IVT_USE_32BIT_QUICKTIME)
+        # Quicktime only available in 32 bit. Only few 32 Bit Macs out there. Drawback: these also have to set this option to get Quicktime running
+        find_package(QuickTime)
+    endif()
+endif()
+
+###############################################
+# setup sources, headers and libs
+###############################################
+set(IVT_VIDEOCAPTURE_REQUIRED_LIBRARIES ivt)
+
+set(IVT_VIDEOCAPTURE_SOURCES
+    VideoCapture/UncompressedAVICapture.cpp
+    VideoCapture/BitmapCapture.cpp
+    VideoCapture/BitmapSequenceCapture.cpp
+   )
+
+if(OPENGL_FOUND)
+    include_directories(${OPENGL_INCLUDE_DIRS})
+    list(APPEND IVT_VIDEOCAPTURE_SOURCES VideoCapture/OpenGLCapture.cpp)
+    list(APPEND IVT_VIDEOCAPTURE_REQUIRED_LIBRARIES ${OPENGL_gl_LIBRARY})
+  
+    set(IVT_VIDEOCAPTURE_HAVE_OPENGL TRUE)
+endif()
+if(DC1394_FOUND)
+    include_directories(${DC1394_INCLUDE_DIRS})
+    list(APPEND IVT_VIDEOCAPTURE_SOURCES VideoCapture/Linux1394Capture.cpp)
+    list(APPEND IVT_VIDEOCAPTURE_REQUIRED_LIBRARIES ${DC1394_LIBRARIES})
+    
+    set(IVT_VIDEOCAPTURE_HAVE_DC1394 TRUE)
+endif()
+if(DC1394V2_FOUND)
+    include_directories(${DC1394V2_INCLUDE_DIRS})
+    list(APPEND IVT_VIDEOCAPTURE_SOURCES VideoCapture/Linux1394Capture2.cpp)
+    list(APPEND IVT_VIDEOCAPTURE_REQUIRED_LIBRARIES ${DC1394V2_LIBRARIES})
+
+    set(IVT_VIDEOCAPTURE_HAVE_DC1394V2 TRUE)
+endif()
+if(QUICKTIME_FOUND)
+    include_directories(${QUICKTIME_INCLUDE_DIRS})
+    list(APPEND IVT_VIDEOCAPTURE_SOURCES VideoCapture/QuicktimeCapture.cpp)
+    list(APPEND IVT_VIDEOCAPTURE_REQUIRED_LIBRARIES ${QUICKTIME_LIBRARIES})
+
+    set(IVT_VIDEOCAPTURE_HAVE_QUICKTIME TRUE)
+endif()
+if(V4L_FOUND)
+    include_directories(${V4L_INCLUDE_DIRS})
+    list(APPEND IVT_VIDEOCAPTURE_SOURCES VideoCapture/V4LCapture.cpp)
+    list(APPEND IVT_VIDEOCAPTURE_REQUIRED_LIBRARIES ${V4L_LIBRARIES})
+
+    set(IVT_VIDEOCAPTURE_HAVE_V4L TRUE)
+endif()
+if(Unicap_FOUND)
+    include_directories(${Unicap_INCLUDE_DIRS})
+    list(APPEND IVT_VIDEOCAPTURE_SOURCES VideoCapture/Unicap1394Capture.cpp)
+    list(APPEND IVT_VIDEOCAPTURE_REQUIRED_LIBRARIES ${Unicap_LIBRARIES})
+
+    set(IVT_VIDEOCAPTURE_HAVE_UNICAP TRUE)
+endif()
+if(OpenCV_FOUND)
+    include_directories(${OpenCV_INCLUDE_DIRS})
+    list(APPEND IVT_VIDEOCAPTURE_SOURCES VideoCapture/OpenCVCapture.cpp)
+    list(APPEND IVT_VIDEOCAPTURE_REQUIRED_LIBRARIES ${OpenCV_LIBRARIES})
+
+   if(IVT_USE_OPENCV1)
+        set(IVT_VIDEOCAPTURE_HAVE_OPENCV1 TRUE)
+    else()
+        set(IVT_VIDEOCAPTURE_HAVE_OPENCV2 TRUE)
+    endif()
+endif()
+if(SVS_FOUND)
+    include_directories(${SVS_INCLUDE_DIRS})
+    list(APPEND IVT_VIDEOCAPTURE_SOURCES VideoCapture/SVSCapture.cpp)
+    list(APPEND IVT_VIDEOCAPTURE_REQUIRED_LIBRARIES ${SVS_LIBRARIES})
+
+    set(IVT_VIDEOCAPTURE_HAVE_SVS TRUE)
+endif()
+
+if(MSVC)
+    list(APPEND IVT_VIDEOCAPTURE_SOURCES VideoCapture/VFWCapture.cpp)
+    list(APPEND IVT_VIDEOCAPTURE_REQUIRED_LIBRARIES ${VFW_LIBRARIES})
+
+    set(IVT_VIDEOCAPTURE_HAVE_VFW TRUE)
+endif()
+
+if(USE_CMU1394)
+    list(APPEND IVT_VIDEOCAPTURE_SOURCES VideoCapture/CMU1394Capture.cpp)
+    list(APPEND IVT_VIDEOCAPTURE_REQUIRED_LIBRARIES ${VFW_LIBRARIES})
+
+    set(IVT_VIDEOCAPTURE_HAVE_CMU1394 TRUE)
+endif()
+
+append_headers_from_cpp(IVT_VIDEOCAPTURE_HEADERS "${IVT_VIDEOCAPTURE_SOURCES}" ${IVT_INCLUDE_DIR})
+create_source_groups("${IVT_VIDEOCAPTURE_SOURCES}")
+create_source_groups("${IVT_VIDEOCAPTURE_HEADERS}")
+    
+###############################################
+# build the target
+###############################################
+include_directories(${IVT_INCLUDE_DIR})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+add_library(ivtvideocapture STATIC ${IVT_VIDEOCAPTURE_SOURCES} ${IVT_VIDEOCAPTURE_HEADERS})
+target_link_libraries(ivtvideocapture ${IVT_VIDEOCAPTURE_REQUIRED_LIBRARIES} )
+set(IVT_LIBRARIES ${IVT_LIBRARIES} ivtvideocapture)
+
+###############################################
+# library properties
+###############################################
+set_target_properties( ivtvideocapture  PROPERTIES
+    VERSION ${IVT_VERSION}
+    SOVERSION ${IVT_MAJOR_VERSION}
+)
+
+# .DLL path
+set_target_properties(ivtvideocapture PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${IVT_BINARY_DIR})
+# .so path
+set_target_properties(ivtvideocapture PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${IVT_LIBRARY_DIR})
+# .lib path (this is needed for setting the DLL-import library path on windows)
+set_target_properties(ivtvideocapture PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${IVT_LIBRARY_DIR})
+
+###############################################
+# configuration and installs
+###############################################
+# generate config.h
+configure_file(${IVT_CMAKE_DIR}/templates/ivtvideocapture_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_DIR}/ivtvideocapture_config.h)
+
+# install headers
+foreach(HEADER ${IVT_VIDEOCAPTURE_HEADERS})
+    string(REGEX MATCH "(.*)[/\\]" DIR ${HEADER})
+    install(FILES ${HEADER} DESTINATION ${IVT_INSTALL_HEADER_DIR}/${DIR} COMPONENT Headers)
+endforeach()
+
+# install configs
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_DIR}/ivtvideocapture_config.h DESTINATION ${IVT_INSTALL_HEADER_DIR}/${CONFIG_DIR} COMPONENT Headers)
+
+# install target
+install(TARGETS ivtvideocapture
+        EXPORT IVT-targets
+        ARCHIVE DESTINATION ${IVT_INSTALL_LIBRARY_DIR}
+        RUNTIME DESTINATION ${IVT_INSTALL_LIBRARY_DIR}
+        LIBRARY DESTINATION ${IVT_INSTALL_LIBRARY_DIR}
+        COMPONENT Libraries
+        )        

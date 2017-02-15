@@ -1,0 +1,9 @@
+#ifndef IVT_CONFIG_H
+#define IVT_CONFIG_H
+
+#define IVT_BUILD_SYSTEM_PROCESSOR @CMAKE_SYSTEM_PROCESSOR@
+#define IVT_VERSION "@IVT_VERSION@"
+#cmakedefine IVT_HAVE_OPENGL
+#cmakedefine IVT_HAVE_SVS
+
+#endif /* IVT_CONFIG_H */

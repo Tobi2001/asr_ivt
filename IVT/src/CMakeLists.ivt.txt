@@ -1,0 +1,213 @@
+################################################
+# IVT VideoCapture Library CMakeFile
+################################################
+# authors:  Kai Welke (welke@kit.edu)
+#           Manfred Kröhnert (kroenert@kit.edu)
+################################################
+include("${IVT_CMAKE_DIR}/macros/IVTMacros.cmake")
+
+################################################
+# find dependencies
+################################################
+find_package(OpenGL)
+find_package(SVS)
+find_package(Threads)
+
+###############################################
+# setup sources, headers and libs
+###############################################
+set(IVT_REQUIRED_LIBRARIES "")
+
+set(IVT_SOURCES
+    Calibration/DLTCalibration.cpp
+    Calibration/Calibration.cpp
+    Calibration/StereoCalibration.cpp
+    Calibration/ExtrinsicParameterCalculator.cpp
+    Calibration/Rectification.cpp
+    Calibration/Undistortion.cpp
+    Calibration/UndistortionSimple.cpp
+    
+    Classification/NearestNeighbor.cpp
+
+    Color/Color.cpp
+    Color/RGBColorModel.cpp
+    Color/ColorParameterSet.cpp
+    
+    Contours/ContourHelper.cpp
+    
+    DataProcessing/Normalizer.cpp
+    DataProcessing/MeanFilter.cpp
+    DataProcessing/RANSAC.cpp
+    
+    DataStructures/DynamicArray.cpp
+    DataStructures/KdTree/KdTree.cpp
+
+    Features/FeatureSet.cpp
+    Features/PatchFeatures/PatchFeatureEntry.cpp
+    Features/SIFTFeatures/SIFTFeatureCalculator.cpp
+    Features/HarrisSIFTFeatures/HarrisSIFTFeatureCalculator.cpp
+    
+    Helpers/helpers.cpp
+    Helpers/Timer.cpp
+    Helpers/Quicksort.cpp
+    Helpers/BasicFileIO.cpp
+    Helpers/Configuration.cpp
+    Helpers/PerformanceLib.cpp
+    
+    Image/ByteImage.cpp
+    Image/ShortImage.cpp
+    Image/IntImage.cpp
+    Image/FloatImage.cpp
+    Image/ImageProcessor.cpp
+    Image/StereoVision.cpp
+    Image/PrimitivesDrawer.cpp
+    Image/StereoMatcher.cpp
+    Image/ImageMapper.cpp
+    Image/CornerSubpixel.cpp
+    Image/BitmapFont.cpp
+    
+    Math/FloatMatrix.cpp
+    Math/FloatVector.cpp
+    Math/DoubleMatrix.cpp
+    Math/DoubleVector.cpp
+    Math/Math2d.cpp
+    Math/Math3d.cpp
+    Math/Matd.cpp
+    Math/Vecd.cpp
+    Math/LinearAlgebra.cpp
+    Math/SVD.cpp
+    
+    ObjectFinder/ObjectFinder.cpp
+    ObjectFinder/ObjectFinderStereo.cpp
+    ObjectFinder/ObjectColorSegmenter.cpp
+    ObjectFinder/CompactRegionFilter.cpp
+    
+    ParticleFilter/ParticleFilterFramework.cpp
+    ParticleFilter/ParticleFilterFrameworkFloat.cpp
+    
+    Threading/Event.cpp
+    Threading/Mutex.cpp
+    Threading/Threading.cpp
+    
+    Tracking/ICP.cpp
+    Tracking/KLTTracker.cpp
+    Tracking/ObjectPose.cpp
+    Tracking/POSIT.cpp
+    Tracking/RAPiD.cpp
+    Tracking/Tracker2d3d.cpp
+    
+    VideoAccess/VideoReader.cpp
+    )
+
+set(IVT_HEADERS
+    Interfaces/ApplicationHandlerInterface.h  
+    Interfaces/ClassificatorInterface.h       
+    Interfaces/FeatureCalculatorInterface.h   
+    Interfaces/FilterInterface.h              
+    Interfaces/GUIInterface.h
+    Interfaces/MainWindowEventInterface.h
+    Interfaces/MainWindowInterface.h
+    Interfaces/ObjectClassifierInterface.h
+    Interfaces/ObjectEntryFilterInterface.h
+    Interfaces/RegionFilterInterface.h
+    Interfaces/RigidObjectTrackingInterface.h
+    Interfaces/VideoCaptureInterface.h
+    Interfaces/WindowEventInterface.h
+    
+    DataStructures/DynamicArrayTemplatePointer.h
+    DataStructures/DynamicArrayTemplate.h
+    DataStructures/KdTree/KdStructs.h
+    
+    Structs/Structs.h
+    Structs/ObjectDefinitions.h
+    
+    Math/Constants.h
+    
+    Features/FeatureEntry.h
+    Features/SIFTFeatures/SIFTFeatureEntry.h
+    )
+    
+if(CMAKE_USE_WIN32_THREADS_INIT)
+    list(APPEND IVT_SOURCES Threading/WindowsThread.cpp)
+    list(APPEND IVT_HEADERS Threading/Thread.h)
+    list(APPEND IVT_HEADERS Threading/ThreadBase.h)
+elseif(CMAKE_USE_PTHREADS_INIT)
+    list(APPEND IVT_SOURCES Threading/PosixThread.cpp)
+    list(APPEND IVT_HEADERS Threading/Thread.h)
+    list(APPEND IVT_HEADERS Threading/ThreadBase.h)
+    list(APPEND IVT_REQUIRED_LIBRARIES ${CMAKE_THREAD_LIBS_INIT})
+endif()
+
+if(OPENGL_FOUND AND OPENGL_GLU_FOUND)
+    include_directories(${OPENGL_INCLUDE_DIRS})
+    list(APPEND IVT_SOURCES
+        Visualizer/OpenGLVisualizer.cpp
+        Visualizer/OpenGLVisualizerControl.cpp
+    )
+    list(APPEND IVT_REQUIRED_LIBRARIES ${OPENGL_gl_LIBRARY})
+    set(IVT_HAVE_OPENGL TRUE)
+endif()
+
+if(SVS_FOUND)
+    include_directories(${SVS_INCLUDE_DIRS})
+    list(APPEND IVT_SOURCES Image/StereoVisionSVS.cpp)
+    list(APPEND IVT_REQUIRED_LIBRARIES ${SVS_LIBRARIES})
+    set(IVT_HAVE_SVS TRUE)
+endif()
+
+append_headers_from_cpp(IVT_HEADERS "${IVT_SOURCES}" ${IVT_INCLUDE_DIR})
+create_source_groups("${IVT_SOURCES}")
+create_source_groups("${IVT_HEADERS}")
+
+###############################################
+# define target
+###############################################
+include_directories(${IVT_INCLUDE_DIR})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+add_library(ivt STATIC ${IVT_SOURCES} ${IVT_HEADERS})
+target_link_libraries(ivt ${IVT_REQUIRED_LIBRARIES})
+set(IVT_LIBRARIES ${IVT_LIBRARIES} ivt)
+
+###############################################
+# library properties
+###############################################
+set_target_properties( ivt  PROPERTIES
+    VERSION ${IVT_VERSION}
+    SOVERSION ${IVT_MAJOR_VERSION}
+)
+
+if(IVT_LOAD_KPP)
+    set_target_properties(ivt_open COMPILE_DEFINITIONS LOAD_KPP)
+endif()
+
+# .DLL path
+set_target_properties(ivt PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${IVT_BINARY_DIR}")
+# .so path
+set_target_properties(ivt PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${IVT_LIBRARY_DIR}")
+# .lib path (this is needed for setting the DLL-import library path on windows)
+set_target_properties(ivt PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${IVT_LIBRARY_DIR}")
+
+###############################################
+# configuration and installs
+###############################################
+# generate config.h
+configure_file("${IVT_CMAKE_DIR}/templates/ivt_config.h.in" "${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_DIR}/ivt_config.h")
+
+# install headers
+foreach(HEADER ${IVT_HEADERS})
+    string(REGEX MATCH "(.*)[/\\]" DIR ${HEADER})
+    install(FILES ${HEADER} DESTINATION "${IVT_INSTALL_HEADER_DIR}/${DIR}" COMPONENT Headers)
+endforeach()
+
+# install configs
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_DIR}/ivt_config.h" DESTINATION "${IVT_INSTALL_HEADER_DIR}/${CONFIG_DIR}" COMPONENT Headers)
+
+# install target
+install(TARGETS ivt
+        EXPORT IVT-targets
+        ARCHIVE DESTINATION "${IVT_INSTALL_LIBRARY_DIR}"
+        RUNTIME DESTINATION "${IVT_INSTALL_LIBRARY_DIR}"
+        LIBRARY DESTINATION "${IVT_INSTALL_LIBRARY_DIR}"
+        COMPONENT Libraries
+        )        

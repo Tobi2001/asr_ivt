@@ -1,0 +1,105 @@
+################################################
+# IVT VideoCapture Library CMakeFile
+################################################
+# authors:  Kai Welke (welke@kit.edu)
+#           Manfred Kröhnert (kroenert@kit.edu)
+################################################
+include("${IVT_CMAKE_DIR}/macros/IVTMacros.cmake")
+
+###############################################
+# find dependencies
+###############################################
+
+if(IVT_USE_OPENCV1)
+    find_package(OpenCV1 COMPONENTS CV CXCORE CVAUX HIGHGUI)
+else()
+    find_package(OpenCV 2 QUIET COMPONENTS cv cxcore cvaux highgui)
+    
+endif()
+
+
+if(OpenCV_FOUND)
+    if(IVT_USE_OPENCV1)
+        set(IVT_OPENCV_HAVE_OPENCV1 TRUE)
+    else()
+        set(IVT_OPENCV_HAVE_OPENCV2 TRUE)
+		cache_append_value(PACKAGE_DEPENDENCIES "libcv-dev, libcvaux-dev")
+    endif()
+
+    ###############################################
+    # setup sources, headers and libraries
+    ###############################################
+    set(IVT_OPENCV_LIBRARIES ivt ${OpenCV_LIBRARIES})
+
+    set(IVT_OPENCV_SOURCES
+        Calibration/StereoCalibrationCV.cpp
+        Calibration/ExtrinsicParameterCalculatorCV.cpp
+
+        Image/ImageAccessCV.cpp
+        Image/ImageProcessorCV.cpp
+        Image/PrimitivesDrawerCV.cpp
+        Image/IplImageAdaptor.cpp
+        
+        Math/LinearAlgebraCV.cpp
+        )
+
+    if(OpenCV_HIGHGUI_FOUND)
+        list(APPEND IVT_OPENCV_SOURCES
+             Image/ImageAccessCV.cpp
+             ObjectFinder/HaarClassifierCV.cpp
+             VideoAccess/VideoWriterCV.cpp
+        )
+        cache_append_value(PACKAGE_DEPENDENCIES "libhighgui-dev")
+    endif(OpenCV_HIGHGUI_FOUND)
+
+    append_headers_from_cpp(IVT_OPENCV_HEADERS "${IVT_OPENCV_SOURCES}" ${IVT_INCLUDE_DIR})
+    create_source_groups("${IVT_OPENCV_SOURCES}")
+    create_source_groups("${IVT_OPENCV_HEADERS}")
+    
+    ###############################################
+    # define target
+    ###############################################
+    include_directories(${IVT_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS})
+    include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+    add_library(ivtopencv STATIC ${IVT_OPENCV_SOURCES} ${IVT_OPENCV_HEADERS})
+    target_link_libraries(ivtopencv ivt ${IVT_OPENCV_LIBRARIES})
+    set(IVT_LIBRARIES ${IVT_LIBRARIES} ivtopencv)
+   
+    set_target_properties(ivtopencv  PROPERTIES
+        VERSION ${IVT_VERSION}
+        SOVERSION ${IVT_MAJOR_VERSION}
+    )
+
+    # .DLL path
+    set_target_properties(ivtopencv PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${IVT_BINARY_DIR})
+    # .so path
+    set_target_properties(ivtopencv PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${IVT_LIBRARY_DIR})
+    # .lib path (this is needed for setting the DLL-import library path on windows)
+    set_target_properties(ivtopencv PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${IVT_LIBRARY_DIR})  
+
+    ###############################################
+    # installation
+    ###############################################
+    # generate config.h
+    configure_file(${IVT_CMAKE_DIR}/templates/ivtopencv_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_DIR}/ivtopencv_config.h)
+
+    # install headers
+    foreach(HEADER ${IVT_OPENCV_HEADERS})
+        string(REGEX MATCH "(.*)[/\\]" DIR ${HEADER})
+        install(FILES ${HEADER} DESTINATION ${IVT_INSTALL_HEADER_DIR}/${DIR} COMPONENT Headers)
+    endforeach()
+    
+    # install configs
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_DIR}/ivtopencv_config.h DESTINATION ${IVT_INSTALL_HEADER_DIR}/${CONFIG_DIR} COMPONENT Headers)
+
+    # install target
+    install(TARGETS ivtopencv
+            EXPORT IVT-targets
+            ARCHIVE DESTINATION ${IVT_INSTALL_LIBRARY_DIR}
+            RUNTIME DESTINATION ${IVT_INSTALL_LIBRARY_DIR}
+            LIBRARY DESTINATION ${IVT_INSTALL_LIBRARY_DIR}
+            COMPONENT Libraries
+            )        
+
+endif(OpenCV_FOUND)

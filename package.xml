@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<package>
+	<name>asr_ivt</name>
+	<version>1.0.0</version>
+        <description>Ros wrapper for the Integrated Vision Toolkit (IVT)</description>
+	<author>Allgeyer Tobias, Hutmacher Robin, Kleinert Daniel, Meißner Pascal, Scholz Jonas, Stöckle Patrick</author>
+        <maintainer email="pascal.meissner@posteo.de">Meißner Pascal</maintainer>
+        <license>BSD</license>
+	<url>http://sourceforge.net/projects/ivt/?source=directory</url>
+
+	<buildtool_depend>catkin</buildtool_depend>
+	<build_depend>libdc1394-dev</build_depend>
+	
+	<run_depend>libdc1394-dev</run_depend>
+	<run_depend>opencv2</run_depend>
+        <build_depend>opencv2</build_depend>
+</package>
