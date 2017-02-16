@@ -4,7 +4,7 @@
 	<version>1.0.0</version>
         <description>Ros wrapper for the Integrated Vision Toolkit (IVT)</description>
 	<author>Allgeyer Tobias, Hutmacher Robin, Kleinert Daniel, Meißner Pascal, Scholz Jonas, Stöckle Patrick</author>
-        <maintainer email="pascal.meissner@posteo.de">Meißner Pascal</maintainer>
+        <maintainer email="asr-ros@lists.kit.edu">Meißner Pascal</maintainer>
         <license>BSD</license>
 	<url>http://sourceforge.net/projects/ivt/?source=directory</url>
 
