@@ -7,6 +7,7 @@
         <maintainer email="asr-ros@lists.kit.edu">Meißner Pascal</maintainer>
         <license>BSD</license>
 	<url>http://sourceforge.net/projects/ivt/?source=directory</url>
+	<url type="website">http://ros.org/wiki/asr_ivt</url>
 
 	<buildtool_depend>catkin</buildtool_depend>
 	<build_depend>libdc1394-dev</build_depend>
