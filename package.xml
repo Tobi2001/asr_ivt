@@ -2,7 +2,7 @@
 <package>
 	<name>asr_ivt</name>
 	<version>1.0.0</version>
-        <description>Ros wrapper for the Integrated Vision Toolkit (IVT)</description>
+        <description>Ros wrapper for the Integrated Vision Toolkit (IVT) library (version 1.3.22)</description>
 	<author>Allgeyer Tobias, Hutmacher Robin, Kleinert Daniel, Meißner Pascal, Scholz Jonas, Stöckle Patrick</author>
         <maintainer email="asr-ros@lists.kit.edu">Meißner Pascal</maintainer>
         <license>BSD</license>
