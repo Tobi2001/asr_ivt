@@ -71,7 +71,7 @@ endif()
 if(IVT_USE_OPENCV1)
     find_package(OpenCV1 COMPONENTS CV CXCORE HIGHGUI)
 else()
-    find_package(OpenCV 2 QUIET COMPONENTS cv cxcore cvaux highgui)
+    find_package(OpenCV 2 QUIET)
 endif()
 
 

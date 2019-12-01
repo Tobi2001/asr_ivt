@@ -13,7 +13,7 @@ include("${IVT_CMAKE_DIR}/macros/IVTMacros.cmake")
 if(IVT_USE_OPENCV1)
     find_package(OpenCV1 COMPONENTS CV CXCORE CVAUX HIGHGUI)
 else()
-    find_package(OpenCV 2 QUIET COMPONENTS cv cxcore cvaux highgui)
+    find_package(OpenCV 2 QUIET)
     
 endif()
 
