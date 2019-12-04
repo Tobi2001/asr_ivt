@@ -1,0 +1,15 @@
+#ifndef IVT_GUI_CONFIG_H
+#define IVT_GUI_CONFIG_H
+
+#define IVT_GUI_BUILD_SYSTEM_PROCESSOR x86_64
+/* #undef IVT_GUI_HAVE_OPENCV1 */
+#define IVT_GUI_HAVE_OPENCV2
+#define IVT_GUI_HAVE_OPENGL
+/* #undef IVT_GUI_HAVE_Coin3D */
+#define IVT_GUI_HAVE_QT4
+/* #undef IVT_GUI_HAVE_QT3 */
+/* #undef IVT_GUI_HAVE_GTK2 */
+/* #undef IVT_GUI_HAVE_COCOA */
+/* #undef IVT_GUI_HAVE_WIN32 */
+
+#endif /* IVT_GUI_CONFIG_H */

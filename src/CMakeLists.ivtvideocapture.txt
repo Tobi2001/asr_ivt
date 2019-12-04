@@ -135,12 +135,6 @@ set_target_properties( ivtvideocapture  PROPERTIES
     SOVERSION ${IVT_MAJOR_VERSION}
 )
 
-# .DLL path
-set_target_properties(ivtvideocapture PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${IVT_BINARY_DIR})
-# .so path
-set_target_properties(ivtvideocapture PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${IVT_LIBRARY_DIR})
-# .lib path (this is needed for setting the DLL-import library path on windows)
-set_target_properties(ivtvideocapture PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${IVT_LIBRARY_DIR})
 
 ###############################################
 # configuration and installs

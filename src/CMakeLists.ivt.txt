@@ -181,12 +181,6 @@ if(IVT_LOAD_KPP)
     set_target_properties(ivt_open COMPILE_DEFINITIONS LOAD_KPP)
 endif()
 
-# .DLL path
-set_target_properties(ivt PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${IVT_BINARY_DIR}")
-# .so path
-set_target_properties(ivt PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${IVT_LIBRARY_DIR}")
-# .lib path (this is needed for setting the DLL-import library path on windows)
-set_target_properties(ivt PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${IVT_LIBRARY_DIR}")
 
 ###############################################
 # configuration and installs
@@ -211,3 +205,4 @@ install(TARGETS ivt
         LIBRARY DESTINATION "${IVT_INSTALL_LIBRARY_DIR}"
         COMPONENT Libraries
         )        
+

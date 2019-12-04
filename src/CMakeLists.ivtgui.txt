@@ -304,12 +304,6 @@ if(IVT_BUILD_GUI)
         SOVERSION ${IVT_MAJOR_VERSION}
     )
 
-    # .DLL path
-    set_target_properties(${IVT_GUI_LIBRARY_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${IVT_BINARY_DIR})
-    # .so path
-    set_target_properties(${IVT_GUI_LIBRARY_NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${IVT_LIBRARY_DIR})
-    # .lib path (this is needed for setting the DLL-import library path on windows)
-    set_target_properties(${IVT_GUI_LIBRARY_NAME} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${IVT_LIBRARY_DIR})
     
     ###############################################
     # configuration and installs
